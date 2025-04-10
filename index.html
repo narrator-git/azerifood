@@ -532,6 +532,99 @@
                 width: 100%;
             }
         }
+        .form-container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            max-width: 600px;
+            margin: 40px auto;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        .form-group textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        
+        .submit-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s;
+        }
+        
+        .submit-btn:hover {
+            background-color: #00705c;
+        }
+        
+        /* Стили для модального окна */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+        }
+        
+        .modal h2 {
+            margin-bottom: 20px;
+            color: var(--primary);
+        }
+        
+        .modal p {
+            margin-bottom: 30px;
+            font-size: 18px;
+        }
+        
+        .modal-close {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -751,7 +844,63 @@
         </div>
         <button class="checkout-btn">Sifarişi rəsmiləşdir</button>
     </div>
-
+    <section id="order-form" style="display: none; padding: 80px 0;">
+        <div class="container">
+            <h2 class="section-title">Sifarişi rəsmiləşdir</h2>
+            <div class="form-container">
+                <form id="checkout-form">
+                    <div class="form-group">
+                        <label for="name">Ad, Soyad</label>
+                        <input type="text" id="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Telefon nömrəsi</label>
+                        <input type="tel" id="phone" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email">
+                    </div>
+                    <div class="form-group">
+                        <label for="delivery">Çatdırılma üsulu</label>
+                        <select id="delivery" required>
+                            <option value="">Seçin</option>
+                            <option value="delivery">Çatdırılma (+20 HKD)</option>
+                            <option value="pickup">Özün götür</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="address">Çatdırılma ünvanı (əgər çatdırılma seçmisinizsə)</label>
+                        <input type="text" id="address">
+                    </div>
+                    <div class="form-group">
+                        <label for="notes">Əlavə qeydlər</label>
+                        <textarea id="notes"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="payment">Ödəniş üsulu</label>
+                        <select id="payment" required>
+                            <option value="">Seçin</option>
+                            <option value="cash">Qapıda nağd ödəniş</option>
+                            <option value="card">Kartla online ödəniş</option>
+                            <option value="payme">PayMe</option>
+                            <option value="fps">FPS</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="submit-btn">Sifarişi təsdiqlə</button>
+                </form>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Модальное окно подтверждения -->
+    <div class="modal" id="success-modal">
+        <div class="modal-content">
+            <h2>Təşəkkürlər!</h2>
+            <p>Sifarişiniz qəbul edildi. Tezliklə sizinlə əlaqə saxlayacağıq.</p>
+            <button class="modal-close">Tamam</button>
+        </div>
+    </div>
     <!-- Футер -->
     <footer>
         <div class="container">
@@ -784,26 +933,195 @@
         </div>
     </footer>
 
-    <script>
-        // Здесь будет JavaScript код для функциональности сайта
+<script>
+        // Полная JavaScript логика для сайта
         document.addEventListener('DOMContentLoaded', function() {
-            // Открытие/закрытие корзины
-            const cart = document.querySelector('.cart');
-            const closeCartBtn = document.querySelector('.close-cart');
-            const addToCartBtns = document.querySelectorAll('.add-to-cart');
+            // Данные меню
+            const menuItems = [
+                { id: 1, name: 'Azərbaycan plovu', price: 45, image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950', desc: 'Ənənəvi Azərbaycan plovu qoyun əti və doşab ilə' },
+                { id: 2, name: 'Yarpaq dolması', price: 40, image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950', desc: 'Üzüm yarpağında qiymə və düyü dolması' },
+                { id: 3, name: 'Düşbərə', price: 35, image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950', desc: 'Kiçik xəmirdən hazırlanmış ənənəvi şorba' },
+                { id: 4, name: 'Kabab', price: 50, image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950', desc: 'Ənənəvi Azərbaycan kababı lavaş və sumaq ilə' },
+                { id: 5, name: 'Piti', price: 45, image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950', desc: 'Şəki pitisi qoyun əti və noxud ilə' },
+                { id: 6, name: 'Qutab', price: 30, image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950', desc: 'Ət və ya göyərti ilə hazırlanmış ənənəvi qutab' }
+            ];
             
-            // Пока просто имитируем открытие корзины
-            addToCartBtns.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    cart.classList.add('active');
+            // Корзина
+            let cart = [];
+            const cartElement = document.querySelector('.cart');
+            const cartItemsElement = document.querySelector('.cart-items');
+            const totalPriceElement = document.getElementById('total-price');
+            const closeCartBtn = document.querySelector('.close-cart');
+            const checkoutBtn = document.querySelector('.checkout-btn');
+            const orderFormSection = document.getElementById('order-form');
+            const checkoutForm = document.getElementById('checkout-form');
+            const successModal = document.getElementById('success-modal');
+            const modalCloseBtn = document.querySelector('.modal-close');
+            
+            // Добавление товаров в корзину
+            document.querySelectorAll('.add-to-cart').forEach((btn, index) => {
+                btn.addEventListener('click', () => {
+                    const item = menuItems[index];
+                    addToCart(item);
+                    updateCart();
+                    cartElement.classList.add('active');
                 });
             });
             
-            closeCartBtn.addEventListener('click', function() {
-                cart.classList.remove('active');
+            // Функция добавления в корзину
+            function addToCart(item) {
+                const existingItem = cart.find(cartItem => cartItem.id === item.id);
+                
+                if (existingItem) {
+                    existingItem.quantity += 1;
+                } else {
+                    cart.push({
+                        ...item,
+                        quantity: 1
+                    });
+                }
+            }
+            
+            // Обновление отображения корзины
+            function updateCart() {
+                cartItemsElement.innerHTML = '';
+                let total = 0;
+                
+                cart.forEach(item => {
+                    total += item.price * item.quantity;
+                    
+                    const cartItemElement = document.createElement('div');
+                    cartItemElement.className = 'cart-item';
+                    cartItemElement.innerHTML = `
+                        <img src="${item.image}" alt="${item.name}">
+                        <div class="cart-item-info">
+                            <h4>${item.name}</h4>
+                            <p>${item.price} HKD</p>
+                            <div class="cart-item-controls">
+                                <button class="decrease" data-id="${item.id}">-</button>
+                                <span class="quantity">${item.quantity}</span>
+                                <button class="increase" data-id="${item.id}">+</button>
+                                <button class="remove-item" data-id="${item.id}">Sil</button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    cartItemsElement.appendChild(cartItemElement);
+                });
+                
+                totalPriceElement.textContent = `${total} HKD`;
+                
+                // Добавляем обработчики для новых кнопок
+                document.querySelectorAll('.decrease').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = parseInt(this.getAttribute('data-id'));
+                        decreaseQuantity(id);
+                    });
+                });
+                
+                document.querySelectorAll('.increase').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = parseInt(this.getAttribute('data-id'));
+                        increaseQuantity(id);
+                    });
+                });
+                
+                document.querySelectorAll('.remove-item').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = parseInt(this.getAttribute('data-id'));
+                        removeFromCart(id);
+                    });
+                });
+            }
+            
+            // Управление количеством
+            function increaseQuantity(id) {
+                const item = cart.find(item => item.id === id);
+                if (item) {
+                    item.quantity += 1;
+                    updateCart();
+                }
+            }
+            
+            function decreaseQuantity(id) {
+                const item = cart.find(item => item.id === id);
+                if (item && item.quantity > 1) {
+                    item.quantity -= 1;
+                    updateCart();
+                }
+            }
+            
+            function removeFromCart(id) {
+                cart = cart.filter(item => item.id !== id);
+                updateCart();
+            }
+            
+            // Закрытие корзины
+            closeCartBtn.addEventListener('click', () => {
+                cartElement.classList.remove('active');
             });
             
-            // Калькулятор экономии
+            // Оформление заказа
+            checkoutBtn.addEventListener('click', () => {
+                if (cart.length === 0) {
+                    alert('Səbətiniz boşdur!');
+                    return;
+                }
+                
+                cartElement.classList.remove('active');
+                orderFormSection.style.display = 'block';
+                window.scrollTo({
+                    top: orderFormSection.offsetTop,
+                    behavior: 'smooth'
+                });
+            });
+            
+            // Обработка формы заказа
+            checkoutForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Здесь должна быть логика отправки данных на сервер
+                // Для примера просто показываем модальное окно
+                
+                // Собираем данные формы
+                const formData = {
+                    name: document.getElementById('name').value,
+                    phone: document.getElementById('phone').value,
+                    email: document.getElementById('email').value,
+                    delivery: document.getElementById('delivery').value,
+                    address: document.getElementById('address').value,
+                    notes: document.getElementById('notes').value,
+                    payment: document.getElementById('payment').value,
+                    order: cart,
+                    total: totalPriceElement.textContent
+                };
+                
+                // В реальном проекте здесь будет AJAX запрос
+                console.log('Order data:', formData);
+                
+                // Показываем модальное окно успеха
+                successModal.style.display = 'flex';
+                
+                // Очищаем корзину и форму
+                cart = [];
+                updateCart();
+                this.reset();
+                orderFormSection.style.display = 'none';
+            });
+            
+            // Закрытие модального окна
+            modalCloseBtn.addEventListener('click', () => {
+                successModal.style.display = 'none';
+            });
+            
+            // Закрытие модального окна при клике вне его
+            successModal.addEventListener('click', (e) => {
+                if (e.target === successModal) {
+                    successModal.style.display = 'none';
+                }
+            });
+            
+            // Калькулятор экономии (остается без изменений)
             const portionsSlider = document.getElementById('portions');
             const portionsValue = document.getElementById('portions-value');
             
@@ -811,7 +1129,6 @@
                 const value = this.value;
                 portionsValue.textContent = `${value} porsiya`;
                 
-                // Обновляем цены (здесь можно сделать более сложные расчеты)
                 document.querySelector('.our-price .price').textContent = `${value * 45} HKD`;
                 document.querySelector('.savings-results .other-price:nth-child(2) .price').textContent = `${value * 80} HKD`;
                 document.querySelector('.savings-results .other-price:nth-child(3) .price').textContent = `${value * 70} HKD`;
